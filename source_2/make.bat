@@ -1,0 +1,1 @@
+cl main.cpp eight_input.cpp /EHsc
