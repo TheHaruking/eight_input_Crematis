@@ -29,7 +29,7 @@ EMU			:= "D:\Program\VisualBoyAdvanceM878\VisualBoyAdvanceM.exe"
 #---------------------------------------------------------------------------------
 ARCH	:=	-mthumb -mthumb-interwork
 
-CFLAGS	:=	-g -Wall -O3\
+CFLAGS	:=	-g -Wall -O0\
 		-mcpu=arm7tdmi -mtune=arm7tdmi\
  		-fomit-frame-pointer\
 		-ffast-math \

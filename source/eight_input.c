@@ -92,7 +92,7 @@ static const int tbl_ab6_adcbfe[6] = {
 };
 
 // ヘルパー関数
-inline void sort_move_16(eight_input_button_sort_t* sort, 
+void sort_move_16(eight_input_button_sort_t* sort, 
     int A, int B, int sele, int strt, int u0, int d0, int l0, int r0, 
     int X, int Y, int C, int Z, int L1, int R1, int L2, int R2
 //    int home, int pict, int res0, int res1, int l1, int r1, int u1, int d1,
@@ -121,7 +121,7 @@ int eight_input_finish(eight_input_t* clematis)
 	return 0;
 }
 
-inline bool get_bit(eight_input_button_16_t* button_16, int n){
+bool get_bit(eight_input_button_16_t* button_16, int n){
     switch (n) {
         case  0: return button_16->b00;
         case  1: return button_16->b01;
@@ -138,7 +138,7 @@ inline bool get_bit(eight_input_button_16_t* button_16, int n){
         case 12: return button_16->b12;
         case 13: return button_16->b13;
         case 14: return button_16->b14;
-        case 16: return button_16->b15;
+        case 15: return button_16->b15;
         default: return false;
     }
 }
@@ -197,6 +197,22 @@ int get_x4p(int x4, int x4p)
     }
 }
 
+int get_x8p(int x12, int x8p, int* s_x8p)
+{
+    int first;
+    switch (*s_x8p) {
+    case 0:
+        
+        break;
+    case 1:
+        if (x12 <= -1)
+            return -1
+        else
+            return -2
+    }
+    return -1;
+}
+
 int get_ab2(uint32_t hold, int ab2)
 {
     uint32_t hold_ab = (hold & 0x00000003) >> 0;
@@ -232,7 +248,7 @@ int get_ab6(int ab2, uint32_t hold)
     }
 }
 
-int get_ab4p(uint32_t hold, uint32_t push, uint32_t rlse, int* ab4p_state)
+int get_ab4p(uint32_t hold, uint32_t push, uint32_t rlse, int* s_ab4p)
 {
     hold &= 0x00000003;
     push &= 0x00000003;
@@ -240,22 +256,22 @@ int get_ab4p(uint32_t hold, uint32_t push, uint32_t rlse, int* ab4p_state)
 
     bool is_double_pressed = (hold == 3);
     bool is_all_rereased   = (hold == 0);
-    int use = (*ab4p_state) ? push : // 1
+    int use = (*s_ab4p) ? push : // 1
                               rlse ; // 0
-    switch (*ab4p_state) {
+    switch (*s_ab4p) {
         case 0:
             if (is_double_pressed) {
-                *ab4p_state = 1;
+                *s_ab4p = 1;
                 use = push;     // rlse -> push へ更新
             }
             break;
         case 1:
             if (is_all_rereased) {
-                *ab4p_state = 0;
+                *s_ab4p = 0;
             }
             break;
     }
-    return tbl_ab4p[*ab4p_state][use];
+    return tbl_ab4p[*s_ab4p][use];
 }
 
 
@@ -347,12 +363,13 @@ int eight_input_update(eight_input_t* clematis)
     clematis->ex.x8   = get_x8(clematis->hold.all);
     clematis->ex.x12  = get_x12(clematis->ex.x4, clematis->ex.x8);
     clematis->ex.x20  = get_x20(clematis->ex.x4, clematis->ex.x8);
-    clematis->ex.x4p  = get_x4p(clematis->ex.x4, clematis->ex.x4p); 
+    clematis->ex.x4p  = get_x4p(clematis->ex.x4, clematis->ex.x4p);
+    clematis->ex.x8p  = get_x8p(clematis->ex.x4, clematis->ex.x8, &clematis->ex.s_x8p);
 
     clematis->ex.ab2  = get_ab2(clematis->hold.all, clematis->ex.ab2);
     clematis->ex.ab4  = get_ab4(clematis->ex.ab2, clematis->hold.all);
     clematis->ex.ab6  = get_ab6(clematis->ex.ab2, clematis->hold.all);
-    clematis->ex.ab4p = get_ab4p(clematis->hold.all, clematis->push.all, clematis->rlse.all, &clematis->ex.ab4p_state);
+    clematis->ex.ab4p = get_ab4p(clematis->hold.all, clematis->push.all, clematis->rlse.all, &clematis->ex.s_ab4p);
 	
     clematis->ex2.chr = get_chr(clematis->ex.x8, clematis->ex.ab4p, clematis->ex.ab6, clematis->ex.x4p);
 

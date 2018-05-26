@@ -18,7 +18,7 @@ extern "C" {
 typedef struct {
     union { uint32_t all;
         struct {
-            union {	uint8_t byte0;
+            union { uint8_t byte0;
                 struct { bool A   :1, B   :1, sele:1, strt:1,
                               u0  :1, d0  :1, l0  :1, r0  :1;
             }; };
@@ -40,9 +40,9 @@ typedef struct {
 
 // ボタンビット化構造体
 typedef struct {
-    union { uint32_t all;
+    union { uint16_t all;
         struct {
-            union {	uint8_t byte0;
+            union { uint8_t byte0;
                 struct { bool b00  :1,b01  :1,b02  :1,b03  :1,
                               b04  :1,b05  :1,b06  :1,b07  :1;
             }; };
@@ -73,10 +73,11 @@ typedef struct {
 
 // ボタン情報(拡張)
 typedef struct {
-    int x4,    x8,    x12,   x20,   x4p;
-    int ab2,   ab4,   ab6,   ab4p,  ab4p_state;
-    int xy2,   xy4,   xy6;       
-    int lr4_1, lr4_2, ll4,   rr4; 
+    int  x4,     x8,     x12,    x20,    
+         x4p,    x8p,    x12p,   x20p,
+         ab2,    ab4,    ab6,    
+         ab4p,   ab6p,   
+         s_x4p,  s_x8p,  s_x12p, s_ab4p, s_ab6p;
 } eight_input_button_ex_t;
 
 // ボタン情報(拡張2 : 文字関連)
@@ -110,7 +111,7 @@ int eight_input_update(eight_input_t* clematis);
 
 //---------------------------------------------------------------------------------
 #ifdef __cplusplus
-	}	   // extern "C"
+    }      // extern "C"
 #endif
 //---------------------------------------------------------------------------------
 #endif // _eight_input_h_
