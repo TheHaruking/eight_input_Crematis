@@ -13,9 +13,9 @@ IF {%1} == {set} (
   goto END
 
 :BUILD
-  cl main.cpp eight_input.cpp /EHsc /DDEBUG /Zi /Fdmain.pdb main.cpp
+  cl main.cpp eight_input.cpp /EHsc /DDEBUG /Zi /Fdmain.pdb
   if {%errorlevel%} == {0} (
-    REM main.exe
+    main.exe
   )
   goto END
 
