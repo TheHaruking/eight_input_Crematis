@@ -29,9 +29,7 @@ const char pgfs[PGF_NUM][32] = {
 
 class textData {
 public:
-	#define MAX_X	256
-	#define MAX_ROW	4096
-    #define MAX_STR 128
+    const static int MAX_STR = 128;
     wstring str;
     uint16_t str16[MAX_STR];
     textData() {
@@ -81,15 +79,16 @@ int main() {
     intraFontInit();
 
     // Load fonts
-	int i;
 	float size = 1.0f;
 
     intraFont* fonts[PGF_NUM];
-	for (i = 0; i < PGF_NUM; i++){
+	for (int i = 0; i < PGF_NUM; i++){
         fonts[i] = intraFontLoad(pgfs[i], INTRAFONT_STRING_UTF8);
 		intraFontSetStyle(fonts[i], 1.0f, WHITE, DGRAY, INTRAFONT_WIDTH_FIX);
     }
-    intraFontSetStyle(fonts[1], 0.89f, WHITE, DGRAY, INTRAFONT_WIDTH_FIX);
+    // 英字 : 60字 480px, 日本語 : 60字 540px
+    // 16行 : 8x16(margin 1) 
+    intraFontSetStyle(fonts[1], (480.0f / 540.0f), WHITE, DGRAY, INTRAFONT_WIDTH_FIX);
 	intraFontSetAltFont(fonts[0], fonts[1]); // ltn8 <= jpn0
 	intraFont* font = fonts[0];
 
@@ -120,53 +119,50 @@ int main() {
     eight_input_t clematis = { 0 };
     eight_input_init( &clematis, 
             (eight_input_button_16_t*)&pad.Buttons, 
-              13, 14,  0,  3,  4,  5,  6,  7, 
+              13, 14,  0,  3,  4,  6,  7,  5, 
               12, 15, -1, -1,  8,  9, -1, -1);
 	// 物:テキスト と テスト変数
-    textData text (L"");
-    textData text2(L"AA BB CC DD aa bb cc dd -*=+ 0123 456 789 456 789 456 789 456 789 456 789 456 789");
-    textData text3(L"日本語記号☀後☁です日本語記号日本語記号日本語記号日本語記号日本語記号日本語記号日本語記号");
-    textData text4(L"ﾊﾝｶｸｶﾀｶﾅﾊﾝｶｸｶﾀｶﾅﾊﾝｶｸｶﾀｶﾅﾊﾝｶｸｶﾀｶﾅﾊﾝｶｸｶﾀｶﾅﾊﾝｶｸｶﾀｶﾅﾊﾝｶｸｶﾀｶﾅﾊﾝｶｸｶﾀｶﾅﾊﾝｶｸｶﾀｶﾅﾊﾝｶｸｶﾀｶﾅﾊﾝｶｸｶﾀｶﾅ");
-    textData text5(L"int main(int argc, char* args[]) {");
-    textData text6(L"    printf(\"hello world\"); // コメントです。");
-    textData text7(L"}");
-	int count = 0;
+    const int MAX_ROW = 17;
+    textData text[MAX_ROW];
+    uint32_t y = 0;
 
-	// main loop
+	// ★★ main loop ★★
 	while(callbacksRunning()) {
+        // ループ時 初期化処理
 		guUpdate(GRAY);
 		sceCtrlReadBufferPositive(&pad, 1);
         eight_input_update(&clematis);
         
-		size = 1.0f * (pad.Ly / 128.0);
-		// size = 0.203125f;
         // 英語 : 横69文字
-		if (clematis.btn.push.A){
-			// str += "亜";
-            wchar_t c[2] = L"";
-            swprintf(c, sizeof c, L"%d", count % 10);
-			text.addStr(c[0]);
-			count++;
+        if (clematis.btn.push.d0) {
+            y++; y %= 17;
+        }
+        if (clematis.btn.push.u0) {
+            y--; y %= 17;
+        }
+		if (clematis.btn.push.A) {
+			text[y].addStr(L'A');
 		}
         if (clematis.btn.push.B) {
-            text.addStr(L'あ');
-            count++;
+            text[y].addStr(L'あ');
+        }
+        if (clematis.btn.push.Y) {
+            wstring* str = &text[y].str;
+            if (!str->empty()) {
+                str->erase(str->begin() + str->length() - 1);
+            }
         }
         // Draw various text
-        float y = 20;
-        intraFontPrintUCS2(font, 0, y+=17, text.data_ucs2());
-        intraFontPrintUCS2(font, 0, y+=17, text2.data_ucs2());
-		intraFontPrintUCS2(font, 0, y+=17, text3.data_ucs2());
-		intraFontPrintUCS2(font, 0, y+=17, text4.data_ucs2());
-		intraFontPrintUCS2(font, 0, y+=17, text5.data_ucs2());
-		intraFontPrintUCS2(font, 0, y+=17, text6.data_ucs2());
-		intraFontPrintUCS2(font, 0, y+=17, text7.data_ucs2());
+        float y = -2;
+        for (int i = 0; i < MAX_ROW; i++) {
+            intraFontPrintUCS2(font, 0, y+=16, text[i].data_ucs2());
+        }
         // End drawing
 		guFinish();
 	}
 	
 	// Unload our fonts
-    for (i = 0; i < PGF_NUM; i++) {
+    for (int i = 0; i < PGF_NUM; i++) {
         intraFontUnload(fonts[i]);
     }
 

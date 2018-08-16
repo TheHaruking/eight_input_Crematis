@@ -4,8 +4,8 @@
 
 static unsigned int __attribute__((aligned(16))) list[0x40000];
 
-#define BUF_WIDTH (512)
-#define SCR_WIDTH (480)
+#define BUF_WIDTH  (512)
+#define SCR_WIDTH  (480)
 #define SCR_HEIGHT (272)
 
 // void guInit(unsigned int* list) {
