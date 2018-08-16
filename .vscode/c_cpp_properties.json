@@ -43,14 +43,22 @@
             "includePath": [
                 "C:/devkitPro/devkitARM/arm-none-eabi/include",
                 "c:/devkitPro/libgba/include",
+
+                "C:/pspsdk/psp/include",
+                "C:/pspsdk/psp/sdk/include",
+
                 "${workspaceRoot}"
             ],
             "browse": {
-                "limitSymbolsToIncludedHeaders": true,
+                "limitSymbolsToIncludedHeaders": false,
                 "databaseFilename": "",
                 "path": [
                     "C:/devkitPro/devkitARM/arm-none-eabi/include",
                     "c:/devkitPro/libgba/include",
+                    
+                    "C:/pspsdk/psp/include",
+                    "C:/pspsdk/psp/sdk/include",
+                
                     "${workspaceRoot}"
                 ]
             },
