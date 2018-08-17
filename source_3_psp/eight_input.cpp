@@ -112,16 +112,27 @@ static const int tbl_x8_btn[] = {
 ////////////////////////////////////////////////////////////////
 // ヘルパー関数
 ////////////////////////////////////////////////////////////////
+static int two(int n) {
+    // -1 のとき -1 とする
+    if ( n < 0 )
+        return -1;
+    // 2 で 割り切れる回数 求める
+    int i;
+    for (i = 0; n >= 2; i++)
+        n >>= 1;
+    return i;
+}
+
 void sort_move_16(eight_input_button_sort_t* sort, 
     int A, int B, int sele, int strt, int u0, int d0, int l0, int r0, 
     int X, int Y, int C, int Z, int L1, int R1, int L2, int R2
 //    int home, int pict, int res0, int res1, int l1, int r1, int u1, int d1,
 //    int usr0, int usr1, int usr2, int usr3, int l2, int r2, int u2, int d2
 ) {
-    sort->A    = A;    sort->B    = B;    sort->sele = sele; sort->strt = strt;
-    sort->u0   = u0;   sort->d0   = d0;   sort->l0   = l0;   sort->r0   = r0;  
-    sort->X    = X;    sort->Y    = Y;    sort->C    = C;    sort->Z    = Z;   
-    sort->L1   = L1;   sort->R1   = R1;   sort->L2   = L2;   sort->R2   = R2;  
+    sort->A    = two(A);    sort->B    = two(B);    sort->sele = two(sele); sort->strt = two(strt);
+    sort->u0   = two(u0);   sort->d0   = two(d0);   sort->l0   = two(l0);   sort->r0   = two(r0);  
+    sort->X    = two(X);    sort->Y    = two(Y);    sort->C    = two(C);    sort->Z    = two(Z);   
+    sort->L1   = two(L1);   sort->R1   = two(R1);   sort->L2   = two(L2);   sort->R2   = two(R2);  
 }
 
 int eight_input_init(eight_input_t* clematis, eight_input_button_16_t* button_16, 

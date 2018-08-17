@@ -10,7 +10,6 @@
 #include "common/gu.h"
 #include "eight_input.h"
 
-using std::string;
 using std::wstring;
 
 PSP_MODULE_INFO("intraFontTest", PSP_MODULE_USER, 1, 1);
@@ -32,6 +31,7 @@ public:
     const static int MAX_STR = 128;
     wstring str;
     uint16_t str16[MAX_STR];
+
     textData() {
         str = L"";
     }
@@ -41,17 +41,13 @@ public:
         str += c;
     }
 
-    void addStr(wchar_t c) {
-        str += c;
-    }
-
     const wchar_t* data() {
         return str.data();
     }
 
     // wchar_t : 4バイト
     // そのままでは intraFontPrintUCS2 で 表示不可。
-    // よって 2バイト へ 変換する
+    // よって 2バイト へ 変換
     const unsigned short* data_ucs2() {
         int i;
         str16[0] = 0;
@@ -99,28 +95,13 @@ int main() {
 	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
     // くれまちす 初期化
     // 入力情報更新に必要なアドレスを最初に教えてやる必要がある。
-	// 0.PSP_CTRL_SELECT    = 0x00000001,
-    // 1.-
-    // 2.-
-	// 3.PSP_CTRL_START     = 0x00000008,
-	// 4.PSP_CTRL_UP        = 0x00000010,
-	// 5.PSP_CTRL_RIGHT     = 0x00000020,
-	// 6.PSP_CTRL_DOWN      = 0x00000040,
-	// 7.PSP_CTRL_LEFT      = 0x00000080,
-	// 8.PSP_CTRL_LTRIGGER  = 0x00000100,
-	// 9.PSP_CTRL_RTRIGGER  = 0x00000200,
-    //10.-
-    //11.-
-	//12.PSP_CTRL_TRIANGLE  = 0x00001000,
-	//13.PSP_CTRL_CIRCLE    = 0x00002000,
-	//14.PSP_CTRL_CROSS     = 0x00004000,
-	//15.PSP_CTRL_SQUARE    = 0x00008000,
-	//16.PSP_CTRL_HOME      = 0x00010000,
     eight_input_t clematis = { 0 };
     eight_input_init( &clematis, 
             (eight_input_button_16_t*)&pad.Buttons, 
-              13, 14,  0,  3,  4,  6,  7,  5, 
-              12, 15, -1, -1,  8,  9, -1, -1);
+              PSP_CTRL_CIRCLE,   PSP_CTRL_CROSS,    PSP_CTRL_SELECT, PSP_CTRL_START,
+              PSP_CTRL_UP,       PSP_CTRL_DOWN,     PSP_CTRL_LEFT,   PSP_CTRL_RIGHT, 
+              PSP_CTRL_TRIANGLE, PSP_CTRL_SQUARE,   -1, -1, 
+              PSP_CTRL_LTRIGGER, PSP_CTRL_RTRIGGER, -1, -1);
 	// 物:テキスト と テスト変数
     const int MAX_ROW = 17;
     textData text[MAX_ROW];
@@ -132,26 +113,31 @@ int main() {
 		guUpdate(GRAY);
 		sceCtrlReadBufferPositive(&pad, 1);
         eight_input_update(&clematis);
+        // 参照しておく
+        eight_input_button_base_t& push = clematis.btn.push;
+
+        // ↑↓ : 縦選択
+        if (push.d0) { y++; y %= 17; }
+        if (push.u0) { y--; y %= 17; }
+
+        // よく使用するため 参照しておく
+        wstring& s = text[y].str;
         
-        // 英語 : 横69文字
-        if (clematis.btn.push.d0) {
-            y++; y %= 17;
+        // ○×△ 等
+        if (push.l0)    { s.push_back(L'←'); }
+        if (push.r0)    { s.push_back(L'→'); }
+        if (push.L1)    { s.push_back(L'L'); }
+        if (push.R1)    { s.push_back(L'R'); }
+		if (push.A)     { s.push_back(L'○'); }
+        if (push.B)     { s.push_back(L'×'); }
+        if (push.Y)     { if (!s.empty()) {
+                            s.erase(s.begin() + s.length() - 1);
+                        }
         }
-        if (clematis.btn.push.u0) {
-            y--; y %= 17;
-        }
-		if (clematis.btn.push.A) {
-			text[y].addStr(L'A');
-		}
-        if (clematis.btn.push.B) {
-            text[y].addStr(L'あ');
-        }
-        if (clematis.btn.push.Y) {
-            wstring* str = &text[y].str;
-            if (!str->empty()) {
-                str->erase(str->begin() + str->length() - 1);
-            }
-        }
+        if (push.X)     { s.push_back(L'△'); }
+        if (push.sele)  { s.push_back(L'☂'); }
+        if (push.strt)  { s.push_back(L'☀'); }
+
         // Draw various text
         float y = -2;
         for (int i = 0; i < MAX_ROW; i++) {
