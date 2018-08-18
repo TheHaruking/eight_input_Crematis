@@ -54,30 +54,6 @@ static const int tbl_ab4p[2][4] = {
     { -1,  3,  2, -1 },
 };
 
-static const char tbl_chr_alp[2][8][4] = { {
-	{ 'a', 'b', 'c', '1' }, { 'd', 'e', 'f', '2' }, 
-	{ 'g', 'h', 'i', '3' }, { 'j', 'k', 'l', '4' }, 
-	{ 'm', 'n', 'o', '5' }, { 'p', 'q', 'r', 's' }, 
-	{ 't', 'u', 'v', ',' }, { 'w', 'x', 'y', 'z' }, 
-} , {
-	{ 'A', 'B', 'C', '6' }, { 'D', 'E', 'F', '7' }, 
-	{ 'G', 'H', 'I', '8' }, { 'J', 'K', 'L', '9' }, 
-	{ 'M', 'N', 'O', '0' }, { 'P', 'Q', 'R', 'S' }, 
-	{ 'T', 'U', 'V', '.' }, { 'W', 'X', 'Y', 'Z' }, 
-} , };
-
-static const char tbl_chr_sym[2][4][4] = { {
-	{ '\'',',', '(', ')' }, { '\"','.', '<', '>' }, 
-	{ '+', '-', '|', '_' }, { '!', '?', '@', '`' }, 
-} , {
-	{ '^', ':', '{', '}' }, { '~', ';', '[', ']' }, 
-	{ '*', '=', '/', '\\'}, { '#', '$', '%', '&' }, 
-} , };
-
-static const char tbl_chr_esc[2][4] = {
-    { '\t', '\n', '\b', ' ' }, { '\0', '\0', '\0', '\0' },
-};
-
 // 配列回転用テーブル
 // - rot90  : 左に90度回転
 // - udlr   : 上下左右
@@ -110,8 +86,59 @@ static const int tbl_x8_btn[] = {
 };
 
 ////////////////////////////////////////////////////////////////
+// 文字データ
+////////////////////////////////////////////////////////////////
+static const char tbl_chr_alp[2][8][4] = { {
+	{ 'a', 'b', 'c', '1' }, { 'd', 'e', 'f', '2' }, 
+	{ 'g', 'h', 'i', '3' }, { 'j', 'k', 'l', '4' }, 
+	{ 'm', 'n', 'o', '5' }, { 'p', 'q', 'r', 's' }, 
+	{ 't', 'u', 'v', ',' }, { 'w', 'x', 'y', 'z' }, 
+} , {
+	{ 'A', 'B', 'C', '6' }, { 'D', 'E', 'F', '7' }, 
+	{ 'G', 'H', 'I', '8' }, { 'J', 'K', 'L', '9' }, 
+	{ 'M', 'N', 'O', '0' }, { 'P', 'Q', 'R', 'S' }, 
+	{ 'T', 'U', 'V', '.' }, { 'W', 'X', 'Y', 'Z' }, 
+} , };
+
+static const char tbl_chr_sym[2][4][4] = { {
+	{ '\'',',', '(', ')' }, { '\"','.', '<', '>' }, 
+	{ '+', '-', '|', '_' }, { '!', '?', '@', '`' }, 
+} , {
+	{ '^', ':', '{', '}' }, { '~', ';', '[', ']' }, 
+	{ '*', '=', '/', '\\'}, { '#', '$', '%', '&' }, 
+} , };
+
+static const char tbl_chr_esc[2][4] = {
+    { '\t', '\n', '\b', ' ' }, { '\0', '\0', '\0', '\0' },
+};
+
+static const wchar_t tbl_chr_hira[2][8][5] = {
+{
+//  { L'', L'', L'', L'', L'', },
+    { L'あ', L'い', L'う', L'え', L'お', },
+    { L'か', L'き', L'く', L'け', L'こ', },
+    { L'さ', L'し', L'す', L'せ', L'そ', },
+    { L'た', L'ち', L'つ', L'て', L'と', },
+    { L'な', L'に', L'ぬ', L'ね', L'の', },
+    { L'は', L'ひ', L'ふ', L'へ', L'ほ', },
+    { L'ま', L'み', L'む', L'め', L'も', },
+    { L'や', L'を', L'ゆ', L'ん', L'よ', },
+},
+{
+    { L'ぁ', L'ぃ', L'ぅ', L'ぇ', L'ぉ', },
+    { L'が', L'ぎ', L'ぐ', L'げ', L'ご', },
+    { L'ざ', L'じ', L'ず', L'ぜ', L'ぞ', },
+    { L'だ', L'ぢ', L'づ', L'で', L'ど', },
+    { L'ぱ', L'ぴ', L'ぷ', L'ぺ', L'ぽ', },
+    { L'ば', L'び', L'ぶ', L'べ', L'ぼ', },
+    { L'ら', L'り', L'る', L'れ', L'ろ', },
+    { L'ゃ', L'わ', L'ゅ', L'っ', L'ょ', },
+} };
+
+////////////////////////////////////////////////////////////////
 // ヘルパー関数
 ////////////////////////////////////////////////////////////////
+// 2で割り切れる回数 (0x1 -> 0, 0x2 -> 1, 0x4 -> 2)
 static int two(int n) {
     // -1 のとき -1 とする
     if ( n < 0 )
@@ -119,10 +146,11 @@ static int two(int n) {
     // 2 で 割り切れる回数 求める
     int i;
     for (i = 0; n >= 2; i++)
-        n >>= 1;
+        n >>= 1; 
     return i;
 }
 
+// 初期化時、並び方 設定
 void sort_move_16(eight_input_button_sort_t* sort, 
     int A, int B, int sele, int strt, int u0, int d0, int l0, int r0, 
     int X, int Y, int C, int Z, int L1, int R1, int L2, int R2
@@ -135,6 +163,7 @@ void sort_move_16(eight_input_button_sort_t* sort,
     sort->L1   = two(L1);   sort->R1   = two(R1);   sort->L2   = two(L2);   sort->R2   = two(R2);  
 }
 
+// ★ 初期化
 int eight_input_init(eight_input_t* clematis, eight_input_button_16_t* button_16, 
     int A, int B, int sele, int strt, int u0, int d0, int l0, int r0, 
     int X, int Y, int C, int Z, int L1, int R1, int L2, int R2)
@@ -147,11 +176,13 @@ int eight_input_init(eight_input_t* clematis, eight_input_button_16_t* button_16
 	return 0;
 }
 
+// ★ 終了処理
 int eight_input_finish(eight_input_t* clematis)
 {
 	return 0;
 }
 
+// アナログ登録
 void eight_input_set_analog(
     eight_input_t* clematis, int n,
     double* ax, double* ay
@@ -181,6 +212,7 @@ void eight_input_set_analog(
     stex->is_dead = true;
 }
 
+// 指定ビット取得
 bool get_bit(eight_input_button_16_t* button_16, int n){
     switch (n) {
         case  0: return button_16->b00;
@@ -203,6 +235,7 @@ bool get_bit(eight_input_button_16_t* button_16, int n){
     }
 }
 
+// 十字キー : 4方向
 int get_x4(uint32_t hold, int x4)
 {
     uint32_t hold_udlr = (hold & 0x000000F0) >> 4;
@@ -219,12 +252,14 @@ int get_x4(uint32_t hold, int x4)
     }
 }
 
+// 十字キー : 8方向
 int get_x8(uint32_t hold)
 {
     uint32_t hold_udlr  = (hold & 0x000000F0) >> 4;
     return tbl_x8[hold_udlr];
 }
 
+// 十字キー : 3 x 4 方向
 int get_x12(int x4, int x8)
 {
     if (x4 >= 0) {
@@ -234,6 +269,7 @@ int get_x12(int x4, int x8)
     }
 }
 
+// 十字キー : 5 x 4 方向
 int get_x20(int x4, int x8)
 {
     if (x4 >= 0) {
@@ -243,6 +279,7 @@ int get_x20(int x4, int x8)
     }
 }
 
+// 十字キー : 4方向 (push瞬間)
 int get_x4p(int x4, int x4p)
 {
     bool no_press = (x4 == -1);
@@ -257,6 +294,7 @@ int get_x4p(int x4, int x4p)
     }
 }
 
+// 十字キー : 8方向 (斜め : push瞬間, 縦横 : rrse瞬間)
 void set_x8p(eight_input_state_t* _x8p, const eight_input_button_t* btn)
 {
     _x8p->data = -1;
@@ -278,6 +316,7 @@ void set_x8p(eight_input_state_t* _x8p, const eight_input_button_t* btn)
     }
 }
 
+// ABボタン : 2組
 int get_ab2(uint32_t hold, int ab2)
 {
     uint32_t hold_ab = (hold & 0x00000003) >> 0;
@@ -293,6 +332,8 @@ int get_ab2(uint32_t hold, int ab2)
         return ab2;  // そのまま
     }
 }
+
+// ABボタン : 4組
 int get_ab4(int ab2, uint32_t hold)
 {
     hold &= 0x00000003;
@@ -303,6 +344,7 @@ int get_ab4(int ab2, uint32_t hold)
     }
 }
 
+// ABボタン : 6組
 int get_ab6(int ab2, uint32_t hold)
 {
     hold &= 0x00000003;
@@ -313,6 +355,7 @@ int get_ab6(int ab2, uint32_t hold)
     }
 }
 
+// ABボタン : 4組(AB BA : push瞬間, A B : rrse瞬間))
 void set_ab4p(eight_input_button_ex_t* ex, const eight_input_button_t* btn)
 {
     int hold = btn->hold.AB;
@@ -447,6 +490,7 @@ void set_analog_ex(eight_input_stick_ex_t* stex, const eight_input_stick_t* st){
     }
 }
 
+// ★ 更新処理
 int eight_input_update(eight_input_t* clematis)
 {
     // oldd に 代入
@@ -500,32 +544,3 @@ int eight_input_update(eight_input_t* clematis)
     set_analog_ex(&clematis->st0ex, &clematis->st0);
     return 0;
 }
-
-
-
-
-//////////////////////////////////////////////////////////////////////////
-// ひらがな関連
-/////////////////////////////////////
-static const wchar_t tbl_chr_hira[2][8][5] = {
-{
-//  { L'', L'', L'', L'', L'', },
-    { L'あ', L'い', L'う', L'え', L'お', },
-    { L'か', L'き', L'く', L'け', L'こ', },
-    { L'さ', L'し', L'す', L'せ', L'そ', },
-    { L'た', L'ち', L'つ', L'て', L'と', },
-    { L'な', L'に', L'ぬ', L'ね', L'の', },
-    { L'は', L'ひ', L'ふ', L'へ', L'ほ', },
-    { L'ま', L'み', L'む', L'め', L'も', },
-    { L'や', L'を', L'ゆ', L'ん', L'よ', },
-},
-{
-    { L'ぁ', L'ぃ', L'ぅ', L'ぇ', L'ぉ', },
-    { L'が', L'ぎ', L'ぐ', L'げ', L'ご', },
-    { L'ざ', L'じ', L'ず', L'ぜ', L'ぞ', },
-    { L'だ', L'ぢ', L'づ', L'で', L'ど', },
-    { L'ぱ', L'ぴ', L'ぷ', L'ぺ', L'ぽ', },
-    { L'ば', L'び', L'ぶ', L'べ', L'ぼ', },
-    { L'ら', L'り', L'る', L'れ', L'ろ', },
-    { L'ゃ', L'わ', L'ゅ', L'っ', L'ょ', },
-} };
