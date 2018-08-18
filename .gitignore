@@ -22,4 +22,4 @@ source_2_win/mtest.bat
 .gitignore
 180503_eight_input.code-workspace
 source_3_psp/m.bat
-.vscode/settings.json
+source_3_psp/PARAM.SFO
