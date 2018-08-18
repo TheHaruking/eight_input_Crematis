@@ -21,3 +21,5 @@ source_2_win/mtest.bat
 *.o
 .gitignore
 180503_eight_input.code-workspace
+source_3_psp/m.bat
+.vscode/settings.json
