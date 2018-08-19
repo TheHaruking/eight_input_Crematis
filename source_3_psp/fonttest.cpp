@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <wchar.h>
 #include <string>
-// #include <pspsdk.h>
+#include <vector>
 #include <pspkernel.h>
 #include <pspctrl.h>
 #include <pspdebug.h>
@@ -10,8 +10,6 @@
 #include "common/callbacks.h"
 #include "common/gu.h"
 #include "eight_input.h"
-
-using std::wstring;
 
 PSP_MODULE_INFO("intraFontTest", PSP_MODULE_USER, 1, 1);
 
@@ -27,29 +25,44 @@ const char pgfs[PGF_NUM][32] = {
 0x08 : 大    | 小
 */
 
-// 行単位で保存
+namespace mylib {
+// using
+using std::wstring;
+using std::vector;
+typedef vector<wstring> wstrings;
+
 class textData {
-public:
+// 定数・変数
+private:
 	// 定数
 	const static int 
-		MAX_STR = 128   ,   // intraFontPrint : 256バイト制限 ｱﾘ
-		MAX_ROW = 4096  ,   // 4096行 (ひとまず)
-		MAX_BUF = 4096      // 4096文字 (ひとまず)
+		MAX_STR = 128 ,	// intraFontPrint : 256バイト制限 ｱﾘ
+		MAX_ROW = 4096,	// 4096行 (ひとまず)
+		MAX_BUF = 4096,	// 4096文字 (ひとまず)
 	;
-
-	wstring texts[MAX_ROW];
+	// 変数
+	int _current_row;	// 選択中の行
+	int _max_row;		// 全行数
 	uint16_t out[MAX_STR];
-	// int row;
+public:
+	enum current_row_func {
+		ROW_FUNC_INC, ROW_FUNC_DEC	
+	};
+	wstring texts[MAX_ROW];
+	wstrings test;
 
+// 関数
+private:
 	void init() {
-		// row = 0;
+		_current_row	= 0;
+		_max_row		= 0;
 	}
-
+public:
 	textData() {
 		init();
 	}
 
-	// 行ごとに分割
+	// 直読み込み(行ごとに分割)
 	textData(const wchar_t str[]) {
 		wchar_t str1[MAX_BUF];
 		int i = 0;
@@ -70,6 +83,7 @@ public:
 	textData(const uint16_t* data, int size) {
 		if (data[0] != 0xFEFF) return; // BOM確認
 		data++; // BOM を飛ばす
+		size /= 2; // uint8_t数 → uint16_t数
 
 		wchar_t str1[MAX_BUF];
 		int i = 0;
@@ -79,19 +93,34 @@ public:
 		init();
 		// wcstok は 元を破壊する。コピーしておく
 		// ※ 32bit(wchar_t) に 変換していく 
-		for (i = 0; i < (size / 2); i++) {
+		for (i = 0; i < size; i++) {
 			str1[i] = (wchar_t)(data[i]);
 		}
 		row = wcstok(str1, L"\n", &buf);
 		for (i = 0; row != NULL; i++) {
-			texts[i] += row; // 文字列 追加していく
+			wstring& s = texts[i];
+			s += row; // 文字列 追加していく
+			// 残った \r 消しておく
+			if (s[s.length() - 1] == L'\r')
+				s.erase(s.begin() + s.length() - 1); 
 			row = wcstok(NULL, L"\n", &buf);
 		}
-
+		_max_row = i;
 	}
 
-	const wchar_t* data() {
-		return texts[0].data();
+	// テキスト操作
+	// 末尾挿入
+	void push_back(wchar_t c) {
+		texts[_current_row].push_back(c);
+	}
+
+	// 末尾削除
+	wchar_t pop_back() {
+		wstring& sss = texts[_current_row];
+		int p = sss.length() - 1;
+		wchar_t c = sss[p]; 
+		sss.erase(p); 
+		return c;
 	}
 
 	// wchar_t : 4バイト
@@ -102,10 +131,25 @@ public:
 		for (i = 0; i < MAX_STR && texts[row][i]; i++) {
 			out[i] = (uint16_t)texts[row][i];
 		}
-		out[i] = 0;
+		out[i] = L'\0';
 		return (const unsigned short*)out;
 	}
-};
+
+	// Get, Set
+	int  max_row(){ return _max_row; }
+	int  current_row(){ return _current_row; }
+	void current_row(int n){
+		if (n < 0)			{ n = 0; }
+		if (n > _max_row-1)	{ n = _max_row-1; }
+		_current_row = n;
+	}
+	void current_row(current_row_func func) {
+		switch (func) {
+			case ROW_FUNC_INC: current_row(_current_row + 1); break;
+			case ROW_FUNC_DEC: current_row(_current_row - 1); break;
+		}
+	}
+}; }
 
 // ★★★ main ★★★
 int main() {
@@ -166,9 +210,7 @@ int main() {
 	sceIoClose(fdout);
 
 	// 物:テキスト と テスト変数
-	const int MAX_ROW_TEST = 17;
-	int32_t y = 0;
-	textData text = textData(
+	mylib::textData text = mylib::textData(
 //		L"test です。\n"
 //		L"test aaa\n"
 //		L"やっほー！！ ★★"
@@ -185,30 +227,26 @@ int main() {
 		eight_input_button_base_t& push = clematis.btn.push;
 
 		// ↑↓ : 縦選択
-		if (push.d0) { y++; y %= MAX_ROW_TEST; }
-		if (push.u0) { y--; if (y < 0) { y = (MAX_ROW_TEST - 1); } }
+		if (push.d0) { text.current_row(text.ROW_FUNC_INC); }
+		if (push.u0) { text.current_row(text.ROW_FUNC_DEC); }
 
-		// よく使用するため 参照しておく
-		wstring& s = text.texts[y];
-		
 		// ○×△ 等
-		if (push.l0)    { s.push_back(L'←'); }
-		if (push.r0)    { s.push_back(L'→'); }
-		if (push.L1)    { s.push_back(L'L' ); }
-		if (push.R1)    { s.push_back(L'R' ); }
-		if (push.A)     { s.push_back(L'○'); }
-		if (push.B)     { s.push_back(L'×' ); }
-		if (push.Y)     { if (!s.empty()) {
-							s.erase(s.begin() + s.length() - 1);
-						} }
-		if (push.X)     { s.push_back(L'△'); }
-		if (push.sele)  { s.push_back(L'☂'); }
-		if (push.strt)  { s.push_back(L'☀'); }
+		if (push.l0)    { text.push_back(L'←'); }
+		if (push.r0)    { text.push_back(L'→'); }
+		if (push.L1)    { text.push_back(L'L' ); }
+		if (push.R1)    { text.push_back(L'R' ); }
+		if (push.A)     { text.push_back(L'○'); }
+		if (push.B)     { text.push_back(L'×' ); }
+		if (push.Y)     { text.pop_back(); }
+		if (push.X)     { text.push_back(L'△'); }
+		if (push.sele)  { text.push_back(L'☂'); }
+		if (push.strt)  { text.push_back(L'☀'); }
 
 		// Draw various text
-		float y = -2;
-		for (int i = 0; i < MAX_ROW_TEST; i++) {
-			intraFontPrintUCS2(font, 0, y+=16, text.data_ucs2(i));
+		float y = 16;
+		for (int i = 0; i < text.max_row() - 1; i++) {
+			intraFontPrintUCS2(font, 0, y, text.data_ucs2(i));
+			y += 16;
 		}
 		// End drawing
 		guFinish();
