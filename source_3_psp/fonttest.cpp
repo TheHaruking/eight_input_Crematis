@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <wchar.h>
 #include <string>
-#include <vector>
+#include <list>
 #include <pspkernel.h>
 #include <pspctrl.h>
 #include <pspdebug.h>
@@ -28,8 +28,8 @@ const char pgfs[PGF_NUM][32] = {
 namespace mylib {
 // using
 using std::wstring;
-using std::vector;
-typedef vector<wstring> wstrings;
+using std::list;
+typedef list<wstring> wstrings;
 
 class textData {
 // 定数・変数
@@ -105,7 +105,7 @@ public:
 				s.erase(s.begin() + s.length() - 1); 
 			row = wcstok(NULL, L"\n", &buf);
 		}
-		_max_row = i;
+		_max_row = i - 1;
 	}
 
 	// テキスト操作
@@ -117,6 +117,8 @@ public:
 	// 末尾削除
 	wchar_t pop_back() {
 		wstring& sss = texts[_current_row];
+		if (sss.empty())
+			return L'\0';
 		int p = sss.length() - 1;
 		wchar_t c = sss[p]; 
 		sss.erase(p); 
@@ -136,11 +138,11 @@ public:
 	}
 
 	// Get, Set
-	int  max_row(){ return _max_row; }
+	int  max_row()    { return _max_row; }
 	int  current_row(){ return _current_row; }
 	void current_row(int n){
-		if (n < 0)			{ n = 0; }
-		if (n > _max_row-1)	{ n = _max_row-1; }
+		if (n < 0)				{ n = 0; }
+		if (n > _max_row - 1)	{ n = _max_row - 1; }
 		_current_row = n;
 	}
 	void current_row(current_row_func func) {
@@ -196,7 +198,8 @@ int main() {
 			PSP_CTRL_LTRIGGER, PSP_CTRL_RTRIGGER, -1,              -1 );
 
 	// textファイル サイズ取得
-	const char file[] = "./★テスト.txt";
+	// const char file[] = "★テスト.txt";
+	const char file[] = "test.txt";
 	SceIoStat stat;
 	sceIoGetstat(file, &stat);
 
@@ -216,6 +219,7 @@ int main() {
 //		L"やっほー！！ ★★"
 		(uint16_t*)data, stat.st_size
 	);
+	delete data;
 
 	// ★★ main loop ★★
 	while(callbacksRunning()) {
