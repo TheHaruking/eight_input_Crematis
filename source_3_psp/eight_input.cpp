@@ -1,9 +1,9 @@
 #include "eight_input.h"
-#define  _USE_MATH_DEFINES // "M_PI" のため
 #include <math.h>
 
-const double DEAD_VAL   = 8000.0;
-const double DEAD_VAL_2 = 6000.0;
+const float DEAD_VAL   = 8000.0f;
+const float DEAD_VAL_2 = 6000.0f;
+const float PI_VAL     = 3.14159265f;
 
 ////////////////////////////////////////////////////////////////
 // データ
@@ -480,7 +480,7 @@ void set_analog_ex(eight_input_stick_ex_t* stex, const eight_input_stick_t* st){
             break;
         }
         stex->ang     = (stex->is_dead) ? -1:
-                        atan2(st->hold.x, st->hold.y) / M_PI;
+                        atan2(st->hold.x, st->hold.y) / PI_VAL;
 
 		int ang2 = (int)((stex->ang + 1.0) * 8.0);
         stex->x8      = (stex->is_dead) ? -1:

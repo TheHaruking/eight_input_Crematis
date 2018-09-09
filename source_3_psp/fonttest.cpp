@@ -5,11 +5,11 @@
 #include <pspkernel.h>
 #include <pspctrl.h>
 #include <pspdebug.h>
-#include <oslib/intraFont/intraFont.h>
 
 #include "common/callbacks.h"
 #include "common/gu.h"
 #include "eight_input.h"
+#include "intraFont/intraFont.h"
 
 PSP_MODULE_INFO("intraFontTest", PSP_MODULE_USER, 1, 1);
 
@@ -35,11 +35,10 @@ class textData {
 // 定数・変数
 private:
 	// 定数
-	const static int 
-		MAX_STR = 128 ,	// intraFontPrint : 256バイト制限 ｱﾘ
-		MAX_ROW = 4096,	// 4096行 (ひとまず)
-		MAX_BUF = 4096,	// 4096文字 (ひとまず)
-	;
+	const static int MAX_STR = 128; 	// intraFontPrint : 256バイト制限 ｱﾘ
+	const static int MAX_ROW = 4096;	// 4096行 (ひとまず)
+	const static int MAX_BUF = 4096;	// 4096文字 (ひとまず)
+
 	// 変数
 	int _current_row;	// 選択中の行
 	int _max_row;		// 全行数
@@ -157,6 +156,7 @@ public:
 int main() {
 	SceCtrlData pad;
 	callbacksSetup();
+	
 
 	// Colors
 	enum colors {
@@ -181,7 +181,6 @@ int main() {
 	intraFontSetStyle(fonts[1], (480.0f / 540.0f), WHITE, DGRAY, INTRAFONT_WIDTH_FIX);
 	intraFontSetAltFont(fonts[0], fonts[1]); // ltn8 <= jpn0
 	intraFont* font = fonts[0];
-
 	// Gu初期化
 	guInit();
 	// ボタン初期化
@@ -225,6 +224,7 @@ int main() {
 	while(callbacksRunning()) {
 		// ループ時 初期化処理
 		guUpdate(GRAY);
+
 		sceCtrlReadBufferPositive(&pad, 1);
 		eight_input_update(&clematis);
 		// 参照しておく
@@ -244,13 +244,24 @@ int main() {
 		if (push.Y)     { text.pop_back(); }
 		if (push.X)     { text.push_back(L'△'); }
 		if (push.sele)  { text.push_back(L'☂'); }
-		if (push.strt)  { text.push_back(L'☀'); }
+		// if (push.strt)  { text.push_back(L'☀'); }
+		if (push.strt)  {
+			for (auto i : { L'☀', L'☂', L'☁', L'㋐' } )
+				text.push_back(i);
+		}
+
+
 
 		// Draw various text
-		float y = 16;
+		float y = 16.0f;
 		for (int i = 0; i < text.max_row() - 1; i++) {
 			intraFontPrintUCS2(font, 0, y, text.data_ucs2(i));
 			y += 16;
+		}
+		
+		{
+			char16_t* ucs2str = u"|";
+			intraFontPrintUCS2(font, 0, 16 * text.current_row() + 14, (uint16_t*)ucs2str); // u ... UTF16 を 示す
 		}
 		// End drawing
 		guFinish();
