@@ -837,8 +837,13 @@ float intraFontPrintColumnUCS2Ex(intraFont *font, float x, float y, float column
 		for (i = 0; i < length; i++) {
 			if (text[i] == '\n') {
 				cccUCS2* ucs2_text = (cccUCS2*)malloc(length*sizeof(cccUCS2));
-				if (!ucs2_text) return x;
-				for (i = 0; i < length; i++) ucs2_text[i] = (text[i] == '\n') ? ' ' : text[i];
+				// 終了 (無くなった場合)
+				if (!ucs2_text)
+					return x;
+				// 置換え '\n' → ' '
+				for (i = 0; i < length; i++)
+					ucs2_text[i] = (text[i] == '\n') ? ' '
+													 : text[i];
 				x = intraFontPrintColumnUCS2Ex(font, x, y, column, ucs2_text, length);
 				free(ucs2_text);
 				return x;
@@ -846,6 +851,7 @@ float intraFontPrintColumnUCS2Ex(intraFont *font, float x, float y, float column
 		}
 	}
 	
+	// 色, 大きさ, 幅-高さ, 始点, ???, fill
 	unsigned int color = font->color, shadowColor = font->shadowColor;
 	float glyphscale = font->size;
 	float width = 0.0f, height = font->advancey * glyphscale / 4.0;
